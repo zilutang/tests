@@ -100,7 +100,7 @@ def scan_directory_for_functions(directory_path, target_function_name):
 # Example usage:
 if __name__ == "__main__":
     directory_path = "./"  # 替换为你的目录路径
-    target_function = "count"  # 替换为目标函数名
+    target_function = "LoadOrbitalElements"  # 替换为目标函数名
     results = scan_directory_for_functions(directory_path, target_function)
 
     print(f"Functions called by {target_function} and their definitions across all files:")
