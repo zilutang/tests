@@ -21,7 +21,16 @@ class FunctionDefVisitor(ast.NodeVisitor):
         # 记录函数定义的位置（行号）
         start_lineno = node.lineno
         end_lineno = node.body[-1].lineno if node.body else start_lineno
-        self.functions[node.name] = (start_lineno, end_lineno)
+
+        # 提取函数的内容
+        function_content = ast.unparse(node) if hasattr(ast, 'unparse') else compile(ast.Expression(node), '', 'exec')
+
+        # 保存函数的定义位置和内容
+        self.functions[node.name] = {
+            'start_lineno': start_lineno,
+            'end_lineno': end_lineno,
+            'content': function_content
+        }
         self.generic_visit(node)
 
 def get_function_calls(file_path, target_function_name):
@@ -57,9 +66,14 @@ def get_function_calls(file_path, target_function_name):
             if node.name == target_function_name:
                 start_lineno = node.position.line
                 end_lineno = node.body[-1].position.line if node.body else start_lineno
-                function_definitions[node.name] = (start_lineno, end_lineno)
+                # 获取方法体内容
+                function_content = ''.join(str(line) for line in node.body)
+                function_definitions[node.name] = {
+                    'start_lineno': start_lineno,
+                    'end_lineno': end_lineno,
+                    'content': function_content
+                }
 
-        # 确保返回一个字典，即使没有找到目标函数
         return {target_function_name: function_definitions.get(target_function_name, None)}
     elif file_path.endswith('.cs'):
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -82,7 +96,12 @@ def get_function_calls(file_path, target_function_name):
                     brace_count -= 1
                 end_pos += 1
             end_lineno = content.count('\n', 0, end_pos) + 1
-            function_definitions[target_function_name] = (start_lineno, end_lineno)
+            function_content = content[match.start():end_pos]
+            function_definitions[target_function_name] = {
+                'start_lineno': start_lineno,
+                'end_lineno': end_lineno,
+                'content': function_content
+            }
 
         return {target_function_name: function_definitions.get(target_function_name)}
     elif file_path.endswith('.cpp'):
@@ -106,7 +125,12 @@ def get_function_calls(file_path, target_function_name):
                     brace_count -= 1
                 end_pos += 1
             end_lineno = content.count('\n', 0, end_pos) + 1
-            function_definitions[target_function_name] = (start_lineno, end_lineno)
+            function_content = content[match.start():end_pos]
+            function_definitions[target_function_name] = {
+                'start_lineno': start_lineno,
+                'end_lineno': end_lineno,
+                'content': function_content
+            }
 
         return {target_function_name: function_definitions.get(target_function_name)}
     elif file_path.endswith('.lua'):
@@ -130,7 +154,12 @@ def get_function_calls(file_path, target_function_name):
                     brace_count -= 1
                 end_pos += 1
             end_lineno = content.count('\n', 0, end_pos) + 1
-            function_definitions[target_function_name] = (start_lineno, end_lineno)
+            function_content = content[match.start():end_pos]
+            function_definitions[target_function_name] = {
+                'start_lineno': start_lineno,
+                'end_lineno': end_lineno,
+                'content': function_content
+            }
 
         return {target_function_name: function_definitions.get(target_function_name)}
 
@@ -158,9 +187,10 @@ def print_function_calls(directory_path, target_function):
     for file, function_calls in results.items():
         for called_func, definition in function_calls.items():
             if definition is not None:
+                start_line, end_line, content = definition['start_lineno'], definition['end_lineno'], definition['content']
                 print(f"In file {file}:")
-                start_line, end_line = definition
-                print(f"  {called_func} is defined from line {start_line} to line {end_line}\n")
+                print(f"  {called_func} is defined from line {start_line} to line {end_line}")
+                print(f"  Function content:\n{content}\n")
 
 # Example usage:
 if __name__ == "__main__":
