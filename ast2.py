@@ -66,12 +66,14 @@ def get_function_calls(file_path, target_function_name):
             if node.name == target_function_name:
                 start_lineno = node.position.line
                 end_lineno = node.body[-1].position.line if node.body else start_lineno
+
                 # 获取方法体内容
-                function_content = ''.join(str(line) for line in node.body)
+                method_content = ''.join(str(statement) for statement in node.body) if node.body else ""
+
                 function_definitions[node.name] = {
                     'start_lineno': start_lineno,
                     'end_lineno': end_lineno,
-                    'content': function_content
+                    'content': method_content
                 }
 
         return {target_function_name: function_definitions.get(target_function_name, None)}
@@ -145,14 +147,10 @@ def get_function_calls(file_path, target_function_name):
         for match in matches:
             start_lineno = content.count('\n', 0, match.start()) + 1
             # 查找函数体的结束行
-            brace_count = 0
             end_pos = match.end()
-            while end_pos < len(content) and brace_count >= 0:
-                if content[end_pos] == '{':
-                    brace_count += 1
-                elif content[end_pos] == '}':
-                    brace_count -= 1
+            while end_pos < len(content) and content[end_pos:end_pos+3] != 'end':
                 end_pos += 1
+            end_pos += 3  # 跳过'end'
             end_lineno = content.count('\n', 0, end_pos) + 1
             function_content = content[match.start():end_pos]
             function_definitions[target_function_name] = {
