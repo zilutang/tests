@@ -77,6 +77,22 @@ def get_function_calls(file_path, target_function_name):
             function_definitions[target_function_name] = (start_lineno, end_lineno)
 
         return {target_function_name: function_definitions.get(target_function_name)}
+    elif file_path.endswith('.cpp'):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        # 使用正则表达式查找C++函数定义
+        pattern = re.compile(r'\b(?:void|int|float|double|string|bool|char|byte|short|long|unsigned|signed|const|static|inline|virtual|template|typename|class|struct)\s+\b' + re.escape(target_function_name) + r'\b\s*\(.*?\)\s*{', re.MULTILINE)
+        matches = pattern.finditer(content)
+
+        function_definitions = {}
+        for match in matches:
+            start_lineno = content.count('\n', 0, match.start()) + 1
+            # 简单假设方法体在同一行结束
+            end_lineno = start_lineno
+            function_definitions[target_function_name] = (start_lineno, end_lineno)
+
+        return {target_function_name: function_definitions.get(target_function_name)}
 
 def scan_directory_for_functions(directory_path, target_function_name):
     # 用于存储所有文件的结果
@@ -85,8 +101,8 @@ def scan_directory_for_functions(directory_path, target_function_name):
     # 遍历目录中的所有文件
     for root, dirs, files in os.walk(directory_path):
         for file in files:
-            # 处理 Python, Java 和 C# 文件
-            if file.endswith('.py') or file.endswith('.java') or file.endswith('.cs'):
+            # 处理 Python, Java, C# 和 C++ 文件
+            if file.endswith('.py') or file.endswith('.java') or file.endswith('.cs') or file.endswith('.cpp'):
                 file_path = os.path.join(root, file)
                 print(f"Processing file: {file_path}")
 
@@ -100,7 +116,10 @@ def scan_directory_for_functions(directory_path, target_function_name):
 # Example usage:
 if __name__ == "__main__":
     directory_path = "./"  # 替换为你的目录路径
-    target_function = "LoadOrbitalElements"  # 替换为目标函数名
+    #target_function = "execute"  # Java
+    #target_function = "create_vsdx"  # Python
+    #target_function = "LoadOrbitalElements"  # C#
+    target_function = "squareRoot"  # C++
     results = scan_directory_for_functions(directory_path, target_function)
 
     print(f"Functions called by {target_function} and their definitions across all files:")
