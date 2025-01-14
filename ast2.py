@@ -93,6 +93,22 @@ def get_function_calls(file_path, target_function_name):
             function_definitions[target_function_name] = (start_lineno, end_lineno)
 
         return {target_function_name: function_definitions.get(target_function_name)}
+    elif file_path.endswith('.lua'):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+
+        # 使用正则表达式查找Lua函数定义
+        pattern = re.compile(r'\bfunction\s+' + re.escape(target_function_name) + r'\b\s*\(.*?\)', re.MULTILINE)
+        matches = pattern.finditer(content)
+
+        function_definitions = {}
+        for match in matches:
+            start_lineno = content.count('\n', 0, match.start()) + 1
+            # 假设函数体在同一行结束
+            end_lineno = start_lineno
+            function_definitions[target_function_name] = (start_lineno, end_lineno)
+
+        return {target_function_name: function_definitions.get(target_function_name)}
 
 def scan_directory_for_functions(directory_path, target_function_name):
     # 用于存储所有文件的结果
@@ -101,10 +117,10 @@ def scan_directory_for_functions(directory_path, target_function_name):
     # 遍历目录中的所有文件
     for root, dirs, files in os.walk(directory_path):
         for file in files:
-            # 处理 Python, Java, C# 和 C++ 文件
-            if file.endswith('.py') or file.endswith('.java') or file.endswith('.cs') or file.endswith('.cpp'):
+            # 处理 Python, Java, C#, C++ 和 Lua 文件
+            if file.endswith('.py') or file.endswith('.java') or file.endswith('.cs') or file.endswith('.cpp') or file.endswith('.lua'):
                 file_path = os.path.join(root, file)
-                print(f"Processing file: {file_path}")
+                #print(f"Processing file: {file_path}")
 
                 # 获取当前文件中目标函数调用的函数定义位置
                 function_calls = get_function_calls(file_path, target_function_name)
@@ -113,20 +129,21 @@ def scan_directory_for_functions(directory_path, target_function_name):
 
     return all_results
 
-# Example usage:
-if __name__ == "__main__":
-    directory_path = "./"  # 替换为你的目录路径
-    #target_function = "execute"  # Java
-    #target_function = "create_vsdx"  # Python
-    #target_function = "LoadOrbitalElements"  # C#
-    target_function = "squareRoot"  # C++
+def print_function_calls(directory_path, target_function):
     results = scan_directory_for_functions(directory_path, target_function)
-
     print(f"Functions called by {target_function} and their definitions across all files:")
     for file, function_calls in results.items():
         for called_func, definition in function_calls.items():
             if definition is not None:
                 print(f"In file {file}:")
                 start_line, end_line = definition
-                print(f"  {called_func} is defined from line {start_line} to line {end_line}")
+                print(f"  {called_func} is defined from line {start_line} to line {end_line}\n")
+
+# Example usage:
+if __name__ == "__main__":
+    directory_path = "./"  # 替换为你的目录路径
+    
+    target_functions = ["execute", "create_vsdx", "LoadOrbitalElements", "squareRoot", "printArray"]
+    for target_function in target_functions:
+        print_function_calls(directory_path, target_function)
 
