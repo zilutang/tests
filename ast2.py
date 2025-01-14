@@ -120,8 +120,16 @@ def get_function_calls(file_path, target_function_name):
         function_definitions = {}
         for match in matches:
             start_lineno = content.count('\n', 0, match.start()) + 1
-            # 假设函数体在同一行结束
-            end_lineno = start_lineno
+            # 查找函数体的结束行
+            brace_count = 0
+            end_pos = match.end()
+            while end_pos < len(content) and brace_count >= 0:
+                if content[end_pos] == '{':
+                    brace_count += 1
+                elif content[end_pos] == '}':
+                    brace_count -= 1
+                end_pos += 1
+            end_lineno = content.count('\n', 0, end_pos) + 1
             function_definitions[target_function_name] = (start_lineno, end_lineno)
 
         return {target_function_name: function_definitions.get(target_function_name)}
@@ -136,7 +144,6 @@ def scan_directory_for_functions(directory_path, target_function_name):
             # 处理 Python, Java, C#, C++ 和 Lua 文件
             if file.endswith('.py') or file.endswith('.java') or file.endswith('.cs') or file.endswith('.cpp') or file.endswith('.lua'):
                 file_path = os.path.join(root, file)
-                #print(f"Processing file: {file_path}")
 
                 # 获取当前文件中目标函数调用的函数定义位置
                 function_calls = get_function_calls(file_path, target_function_name)
