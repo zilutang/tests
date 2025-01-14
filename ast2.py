@@ -72,8 +72,16 @@ def get_function_calls(file_path, target_function_name):
         function_definitions = {}
         for match in matches:
             start_lineno = content.count('\n', 0, match.start()) + 1
-            # 简单假设方法体在同一行结束
-            end_lineno = start_lineno
+            # 查找方法体结束的行号
+            brace_count = 1
+            end_pos = match.end()
+            while brace_count > 0 and end_pos < len(content):
+                if content[end_pos] == '{':
+                    brace_count += 1
+                elif content[end_pos] == '}':
+                    brace_count -= 1
+                end_pos += 1
+            end_lineno = content.count('\n', 0, end_pos) + 1
             function_definitions[target_function_name] = (start_lineno, end_lineno)
 
         return {target_function_name: function_definitions.get(target_function_name)}
