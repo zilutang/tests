@@ -59,7 +59,8 @@ def get_function_calls(file_path, target_function_name):
                 end_lineno = node.body[-1].position.line if node.body else start_lineno
                 function_definitions[node.name] = (start_lineno, end_lineno)
 
-        return {target_function_name: function_definitions.get(target_function_name)}
+        # 确保返回一个字典，即使没有找到目标函数
+        return {target_function_name: function_definitions.get(target_function_name, None)}
     elif file_path.endswith('.cs'):
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -99,11 +100,14 @@ def scan_directory_for_functions(directory_path, target_function_name):
 # Example usage:
 if __name__ == "__main__":
     directory_path = "./"  # 替换为你的目录路径
-    target_function = "create_vsdx"  # 替换为目标函数名
+    target_function = "count"  # 替换为目标函数名
     results = scan_directory_for_functions(directory_path, target_function)
 
     print(f"Functions called by {target_function} and their definitions across all files:")
     for file, function_calls in results.items():
-        print(f"In file {file}:")
-        for called_func, (start_line, end_line) in function_calls.items():
-            print(f"  {called_func} is defined from line {start_line} to line {end_line}")
+        for called_func, definition in function_calls.items():
+            if definition is not None:
+                print(f"In file {file}:")
+                start_line, end_line = definition
+                print(f"  {called_func} is defined from line {start_line} to line {end_line}")
+
