@@ -59,7 +59,9 @@ def get_function_calls(file_path, target_function_name):
         return result
     elif file_path.endswith('.java'):
         with open(file_path, 'r', encoding='utf-8') as file:
-            tree = javalang.parse.parse(file.read())
+            lines = file.readlines()
+
+        tree = javalang.parse.parse(''.join(lines))
 
         function_definitions = {}
         for path, node in tree.filter(javalang.tree.MethodDeclaration):
@@ -67,8 +69,8 @@ def get_function_calls(file_path, target_function_name):
                 start_lineno = node.position.line
                 end_lineno = node.body[-1].position.line if node.body else start_lineno
 
-                # 获取方法体内容
-                method_content = ''.join(str(statement) for statement in node.body) if node.body else ""
+                # 获取从start_lineno到end_lineno的文件内容
+                method_content = ''.join(lines[start_lineno - 1:end_lineno]) if node.body else ""
 
                 function_definitions[node.name] = {
                     'start_lineno': start_lineno,
