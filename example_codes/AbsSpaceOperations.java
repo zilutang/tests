@@ -1,4 +1,4 @@
-package top.usking.sky.knowledge.nebula.codes1;
+package top.usking.sky.knowledge.nebula.example_codes;
 
 import com.vesoft.nebula.client.graph.SessionPool;
 import com.vesoft.nebula.client.graph.data.ResultSet;
